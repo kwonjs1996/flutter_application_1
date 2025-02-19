@@ -10,7 +10,7 @@ class CampaignListScreen extends StatefulWidget {
 
 class _CampaignListScreenState extends State<CampaignListScreen> {
   final CampaignService _campaignService = CampaignService();
-  List<Campaign> _campaigns = [];
+  List<Campaign> _campaigns = []; // ✅ `Campaign` 모델 리스트 사용
 
   @override
   void initState() {
@@ -29,17 +29,15 @@ class _CampaignListScreenState extends State<CampaignListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("체험단 목록")),
-      body: ListView.builder(
-        itemCount: _campaigns.length,
-        itemBuilder: (context, index) {
-          Campaign campaign = _campaigns[index];
-          return CampaignCard(
-            title: campaign.title,
-            company: campaign.companyName,
-            reward: campaign.reward,
-          );
-        },
-      ),
+      body: _campaigns.isEmpty
+          ? Center(child: CircularProgressIndicator()) // ✅ 데이터 로딩 중 표시
+          : ListView.builder(
+              itemCount: _campaigns.length,
+              itemBuilder: (context, index) {
+                Campaign campaign = _campaigns[index];
+                return CampaignCard(campaign: campaign); // ✅ `CampaignCard`에 `Campaign` 객체 전달
+              },
+            ),
     );
   }
 }

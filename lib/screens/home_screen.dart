@@ -1,12 +1,79 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../models/campaign_model.dart';
+import '../services/campaign_service.dart';
 import '../widgets/campaign_card.dart';
+import 'campaign_detail_screen.dart';
+import 'login_screen.dart';
+import 'advertiser_screen.dart';
+import 'campaign_create_screen.dart';
+import 'customer_mypage_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  final List<Map<String, String>> campaigns = [
-    {"title": "신제품 체험단", "company": "ABC 마케팅", "reward": "무료 제품 제공", "image": "https://source.unsplash.com/200x100/?beauty"},
-    {"title": "SNS 홍보단", "company": "XYZ 기업", "reward": "10,000원", "image": "https://source.unsplash.com/200x100/?food"},
-    {"title": "레스토랑 방문 리뷰", "company": "맛집 서포터즈", "reward": "식사권 제공", "image": "https://source.unsplash.com/200x100/?restaurant"},
-  ];
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final CampaignService _campaignService = CampaignService();
+  final AuthService _authService = AuthService();
+  List<Campaign> campaigns = [];
+  bool isLoggedIn = false;
+  bool isAdvertiser = false;
+  bool isCustomer = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCampaigns();
+    _checkLoginStatus();
+  }
+
+  // 🔹 캠페인 데이터 불러오기
+  void _loadCampaigns() async {
+    List<Campaign> loadedCampaigns = await _campaignService.getCampaigns();
+    setState(() {
+      campaigns = loadedCampaigns;
+    });
+  }
+
+  // 🔹 로그인 상태 확인
+  void _checkLoginStatus() async {
+    Map<String, String> userInfo = await _authService.getUserInfo();
+    
+    setState(() {
+      isLoggedIn = userInfo["userId"] != null && userInfo["userId"]!.isNotEmpty;
+      isAdvertiser = (userInfo["userType"] == "advertiser");
+      isCustomer = (userInfo["userType"] == "customer");
+    });
+  }
+
+  // 🔹 마이페이지 이동
+  void _navigateToMyPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CustomerMyPageScreen()),
+    );
+  }
+
+  // 🔹 모집하기 버튼 클릭 시 처리
+  void _handleRecruitment(BuildContext context) {
+    if (!isLoggedIn) {
+      // ❌ 로그인하지 않은 경우 -> 로그인 페이지로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    } else if (isAdvertiser) {
+      // ✅ 광고주라면 캠페인 모집 페이지로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => CampaignCreateScreen()),
+      );
+    }
+    
+  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -14,58 +81,105 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: Text("체험단 모집"),
-        backgroundColor: Theme.of(context).primaryColor, // 🔹 테마 컬러 적용
+        backgroundColor: Theme.of(context).primaryColor,
         actions: [
-          IconButton(icon: Icon(Icons.search, color: Colors.white), onPressed: () {}),
-          IconButton(icon: Icon(Icons.notifications, color: Colors.white), onPressed: () {}),
+          // ✅ 비로그인 상태에서는 "모집하기" + "로그인" 버튼 둘 다 표시
+          if (!isLoggedIn) ...[
+            TextButton(
+              onPressed: () => _handleRecruitment(context),
+              child: Text("모집하기", style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              child: Text("로그인", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+          
+          // ✅ 광고주 로그인 시 "모집하기" 버튼 표시
+          if (isAdvertiser) 
+            TextButton(
+              onPressed: () => _handleRecruitment(context),
+              child: Text("모집하기", style: TextStyle(color: Colors.white)),
+            ),
+
+          // ✅ 소비자 로그인 시 "마이페이지" 버튼 표시
+          if (isCustomer)
+            TextButton(
+              onPressed: () => _navigateToMyPage(context),
+              child: Text("마이페이지", style: TextStyle(color: Colors.white)),
+            ),
+
+          // ✅ 광고주만 "광고주용 채널" 버튼 표시
+          if (isAdvertiser)
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdvertiserScreen()),
+                );
+              },
+              child: Text("광고주용 채널", style: TextStyle(color: Colors.white)),
+            ),
         ],
       ),
       body: Column(
         children: [
-          // 🔹 배너
+          // 🔹 배너 슬라이드
           Container(
             height: 180,
             margin: EdgeInsets.symmetric(vertical: 10),
             child: PageView(
               children: [
-                Image.network("https://cdn.discordapp.com/attachments/1180835740884684813/1339132664288120853/kkamdaeng9260_Create_an_eye-catching_logo_for_TikTok_with_the_t_66debb65-db0e-4fff-bd3f-ea3ebbf0e917.png?ex=67ad9bfb&is=67ac4a7b&hm=f9fbd03904cc737b6453c9200449b4dbd81e061cbd30a0bb512fbbd04327f699&", fit: BoxFit.cover),
-                Image.network("https://cdn.discordapp.com/attachments/1180835740884684813/1338787112065175593/kkamdaeng9260_Create_an_illustration_of_the_TikTok_logo_with_ne_0aad4b16-125a-4813-9929-2ea41e34a662.png?ex=67ad02e8&is=67abb168&hm=a3828393c012b833f767f89ab563565c81726343d6e2892e1a9c8e850fa267a2&", fit: BoxFit.cover),
+                Image.network("https://images.unsplash.com/photo-1726137569820-bff1c68311a1?w=400&auto=format&fit=crop&q=60", fit: BoxFit.cover),
+                Image.network("https://images.unsplash.com/photo-1726137569820-bff1c68311a1?w=400&auto=format&fit=crop&q=60", fit: BoxFit.cover),
               ],
             ),
           ),
 
-          // 🔹 카테고리 필터 버튼 (Flutter 블루 적용)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: ["전체", "뷰티", "음식", "여행", "패션"]
-                  .map((category) => ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[50],
-                          foregroundColor: Color(0xFF0175C2),
-                        ),
-                        child: Text(category),
-                      ))
-                  .toList(),
-            ),
-          ),
-
-          // 🔹 체험단 목록
+          // 🔹 체험단 목록 (GridView 사용하여 2열 배치)
           Expanded(
-            child: ListView.builder(
-              itemCount: campaigns.length,
-              itemBuilder: (context, index) {
-                final campaign = campaigns[index];
-                return CampaignCard(
-                  title: campaign["title"]!,
-                  company: campaign["company"]!,
-                  reward: campaign["reward"]!,
-                  imageUrl: campaign["image"]!,
-                );
-              },
-            ),
+            child: campaigns.isEmpty
+                ? Center(child: CircularProgressIndicator()) // ✅ 로딩 중 표시
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 1),
+                    child: GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // ✅ 2열 배치
+                        crossAxisSpacing: 0,
+                        mainAxisSpacing: 0,
+                        childAspectRatio: 0.6,
+                      ),
+                      itemCount: campaigns.length,
+                      itemBuilder: (context, index) {
+                        final campaign = campaigns[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CampaignDetailScreen(
+                                  title: campaign.title,
+                                  description: "설명 없음",
+                                  maxParticipants: campaign.maxParticipants,
+                                  currentParticipants: campaign.currentParticipants,
+                                  reward: campaign.reward,
+                                  company: campaign.companyName,
+                                  deadline: campaign.deadline,
+                                  imageUrl: campaign.imageUrl,
+                                ),
+                              ),
+                            );
+                          },
+                          child: CampaignCard(campaign: campaign),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
