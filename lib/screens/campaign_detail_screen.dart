@@ -70,29 +70,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     // ✅ 화면 크기 가져오기 (반응형 적용)
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
     // 🔹 모집 마감 여부 확인
     bool isRecruitmentClosed = widget.deadline.isBefore(DateTime.now());
-
-    // ✅ 태그 위젯 함수
-    Widget _buildTag(String text) {
-      return Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.03,
-          vertical: screenHeight * 0.008,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: screenWidth * 0.035,
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(title: Text("체험단 상세")),
@@ -132,17 +112,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: screenHeight * 0.02,
-                    left: screenWidth * 0.04,
-                    child: Row(
-                      children: [
-                        _buildTag("📅 예약 필수"),
-                        SizedBox(width: screenWidth * 0.02),
-                        _buildTag("⚡ 바로 선정"),
-                      ],
-                    ),
-                  ),
+                  // ✅ "예약 필수" & "바로 선정" 태그 추가
                 ],
               ),
 
