@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/auth_service.dart';
 import 'login_screen.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
@@ -13,7 +12,7 @@ class CampaignDetailScreen extends StatefulWidget {
   final DateTime deadline;
   final String imageUrl;
 
-  CampaignDetailScreen({
+  const CampaignDetailScreen({
     required this.title,
     required this.description,
     required this.maxParticipants,
@@ -22,15 +21,15 @@ class CampaignDetailScreen extends StatefulWidget {
     required this.company,
     required this.deadline,
     required this.imageUrl,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   _CampaignDetailScreenState createState() => _CampaignDetailScreenState();
 }
 
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
-  final AuthService _authService = AuthService();
-  bool isLoggedIn = false;
+  bool isLoggedIn = false; // 로그인 상태 (나중에 실제 로그인 체크 로직 추가)
 
   @override
   void initState() {
@@ -38,36 +37,22 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     _checkLoginStatus();
   }
 
-  // 🔹 로그인 상태 확인
   void _checkLoginStatus() async {
-    bool loggedIn = await _authService.isLoggedIn();
+    // 🔹 로그인 상태 체크 로직 (나중에 실제 로그인 체크 추가 필요)
     setState(() {
-      isLoggedIn = loggedIn;
+      isLoggedIn = true; // 테스트용 (나중에 실제 로그인 체크)
     });
   }
 
+  // ✅ 참여 진행률 계산 함수
   double _calculateProgress() {
     if (widget.maxParticipants == 0) return 0;
-    return widget.currentParticipants / widget.maxParticipants;
-  }
-
-  // ✅ D-Day 계산 함수
-  String calculateDDay(DateTime deadline) {
-    final now = DateTime.now();
-    final difference = deadline.difference(now).inDays;
-
-    if (difference < 0) {
-      return "마감"; // 모집 기한이 지난 경우
-    } else if (difference == 0) {
-      return "D-Day"; // 오늘이 마감일
-    } else {
-      return "D-$difference"; // 남은 일 수 표시
-    }
+    return (widget.currentParticipants / widget.maxParticipants)
+        .clamp(0.0, 1.0);
   }
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 화면 크기 가져오기 (반응형 적용)
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
 
@@ -75,105 +60,130 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     bool isRecruitmentClosed = widget.deadline.isBefore(DateTime.now());
 
     return Scaffold(
-      appBar: AppBar(title: Text("체험단 상세")),
+      appBar: AppBar(
+        title: Text("체험단 상세", style: TextStyle(fontSize: screenWidth * 0.05)),
+      ),
       body: SingleChildScrollView(
         child: Padding(
-          padding:
-              EdgeInsets.symmetric(horizontal: screenWidth * 0.05), // 반응형 패딩
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 대표 이미지 + D-Day 표시
-              Stack(
-                children: [
-                  Image.network(
-                    widget.imageUrl,
-                    width: screenWidth, // 화면 너비에 맞게 조정
-                    height: screenHeight * 0.3, // 화면 높이의 30%만큼
-                    fit: BoxFit.cover,
-                  ),
-                  Positioned(
-                    top: screenHeight * 0.02,
-                    left: screenWidth * 0.04,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.03,
-                          vertical: screenHeight * 0.008),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        calculateDDay(widget.deadline),
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: screenWidth * 0.04, // 반응형 폰트 크기
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  // ✅ "예약 필수" & "바로 선정" 태그 추가
-                ],
+              // ✅ 대표 이미지
+              Image.network(
+                widget.imageUrl,
+                width: screenWidth,
+                height: screenHeight * 0.3,
+                fit: BoxFit.cover,
               ),
 
-              SizedBox(height: screenHeight * 0.02), // 반응형 간격
+              SizedBox(height: screenHeight * 0.02),
 
-              // 🔹 모집 현황 UI
-              Text(widget.title,
-                  style: TextStyle(
-                      fontSize: screenWidth * 0.06, // 반응형 제목 크기
-                      fontWeight: FontWeight.bold)),
+              // ✅ 제목
+              Text(
+                widget.title,
+                style: TextStyle(
+                  fontSize: screenWidth * 0.06,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
               SizedBox(height: screenHeight * 0.01),
 
-              Text("주최: ${widget.company}",
-                  style: TextStyle(
-                      fontSize: screenWidth * 0.045, color: Colors.grey[700])),
+              // ✅ 설명
+              Text(
+                widget.description,
+                style: TextStyle(
+                    fontSize: screenWidth * 0.045, color: Colors.grey[700]),
+              ),
+
               SizedBox(height: screenHeight * 0.02),
 
+              // ✅ 참가 인원 & 마감일 정보
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.03,
-                        vertical: screenHeight * 0.008),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      calculateDDay(widget.deadline),
-                      style: TextStyle(
-                          fontSize: screenWidth * 0.04,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                  Text(
+                    "참여자: ${widget.currentParticipants} / ${widget.maxParticipants}",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.045,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: screenWidth * 0.02),
-                  Text("마감일: ${DateFormat('MM월 dd일').format(widget.deadline)}",
-                      style: TextStyle(fontSize: screenWidth * 0.045)),
+                  Text(
+                    "마감일: ${DateFormat('MM.dd').format(widget.deadline)}",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      color: Colors.redAccent,
+                    ),
+                  ),
                 ],
               ),
 
               SizedBox(height: screenHeight * 0.02),
 
-              // 🔹 지원하기 버튼 (반응형 적용)
+              // ✅ 참여 진행률 표시 (Progress Bar)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "참여 진행률",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.045,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.005),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: screenWidth,
+                        height: screenHeight * 0.015,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: LinearProgressIndicator(
+                            value: _calculateProgress(),
+                            minHeight: screenHeight * 0.012,
+                            backgroundColor: Colors.grey[300],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.orangeAccent),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        "${(_calculateProgress() * 100).toStringAsFixed(1)}%",
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.035,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              SizedBox(height: screenHeight * 0.03),
+
+              // ✅ 지원하기 버튼
               Center(
                 child: SizedBox(
-                  width: screenWidth * 0.8, // 버튼 너비: 화면 너비의 80%
-                  height: screenHeight * 0.06, // 버튼 높이: 화면 높이의 6%
+                  width: screenWidth * 0.8,
+                  height: screenHeight * 0.06,
                   child: ElevatedButton(
                     onPressed: isRecruitmentClosed
                         ? null
                         : () {
                             if (!isLoggedIn) {
-                              // ❌ 로그인 안 했을 때 -> 로그인 화면으로 이동
+                              // ❌ 로그인 안 했을 때 -> 로그인 화면 이동
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => LoginScreen()),
                               );
                             } else {
-                              // ✅ 로그인 되어 있을 때 -> 캠페인 지원 로직
+                              // ✅ 로그인 되어 있을 때 -> 체험단 지원 처리
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text("체험단 지원 완료!")),
                               );
@@ -181,7 +191,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isRecruitmentClosed ? Colors.grey : Colors.blue,
+                          isRecruitmentClosed ? Colors.grey : Colors.orange,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -191,11 +201,14 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                           ? "모집 마감됨"
                           : (isLoggedIn ? "체험단 지원하기" : "로그인 후 지원하기"),
                       style: TextStyle(
-                          color: Colors.white, fontSize: screenWidth * 0.045),
+                        color: Colors.white,
+                        fontSize: screenWidth * 0.045,
+                      ),
                     ),
                   ),
                 ),
               ),
+
               SizedBox(height: screenHeight * 0.03),
             ],
           ),

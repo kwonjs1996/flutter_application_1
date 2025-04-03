@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // 🔹 로그인 상태 확인
   void _checkLoginStatus() async {
     Map<String, String> userInfo = await _authService.getUserInfo();
-    
+
     setState(() {
       isLoggedIn = userInfo["userId"] != null && userInfo["userId"]!.isNotEmpty;
       isAdvertiser = (userInfo["userType"] == "advertiser");
@@ -71,16 +71,18 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(builder: (context) => CampaignCreateScreen()),
       );
     }
-    
   }
-  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text("체험단 모집"),
+        title: Text(
+          "숏폼창고",
+          style: TextStyle(
+              fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Theme.of(context).primaryColor,
         actions: [
           // ✅ 비로그인 상태에서는 "모집하기" + "로그인" 버튼 둘 다 표시
@@ -99,9 +101,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text("로그인", style: TextStyle(color: Colors.white)),
             ),
           ],
-          
+
           // ✅ 광고주 로그인 시 "모집하기" 버튼 표시
-          if (isAdvertiser) 
+          if (isAdvertiser)
             TextButton(
               onPressed: () => _handleRecruitment(context),
               child: Text("모집하기", style: TextStyle(color: Colors.white)),
@@ -135,8 +137,12 @@ class _HomeScreenState extends State<HomeScreen> {
             margin: EdgeInsets.symmetric(vertical: 10),
             child: PageView(
               children: [
-                Image.network("https://images.unsplash.com/photo-1726137569820-bff1c68311a1?w=400&auto=format&fit=crop&q=60", fit: BoxFit.cover),
-                Image.network("https://images.unsplash.com/photo-1726137569820-bff1c68311a1?w=400&auto=format&fit=crop&q=60", fit: BoxFit.cover),
+                Image.network(
+                    "https://images.unsplash.com/photo-1726137569820-bff1c68311a1?w=400&auto=format&fit=crop&q=60",
+                    fit: BoxFit.cover),
+                Image.network(
+                    "https://images.unsplash.com/photo-1726137569820-bff1c68311a1?w=400&auto=format&fit=crop&q=60",
+                    fit: BoxFit.cover),
               ],
             ),
           ),
@@ -166,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   title: campaign.title,
                                   description: "설명 없음",
                                   maxParticipants: campaign.maxParticipants,
-                                  currentParticipants: campaign.currentParticipants,
+                                  currentParticipants:
+                                      campaign.currentParticipants,
                                   reward: campaign.reward,
                                   company: campaign.companyName,
                                   deadline: campaign.deadline,
